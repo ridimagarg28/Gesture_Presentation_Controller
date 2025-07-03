@@ -1,3 +1,5 @@
+import math
+
 def get_landmark_positions(hand_landmarks, frame_shape):
     height, width = frame_shape[:2]
     landmarks = []
@@ -20,3 +22,8 @@ def fingers_up(landmarks):
         fingers.append(1 if landmarks[tip_id][2] < landmarks[tip_id - 2][2] else 0)
 
     return fingers
+
+def calculate_distance(p1, p2):
+    x1, y1 = p1
+    x2, y2 = p2
+    return math.hypot(x2-x1, y2-y1)

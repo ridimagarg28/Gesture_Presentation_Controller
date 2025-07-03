@@ -3,7 +3,7 @@ import mediapipe as mp
 import pyautogui
 import time
 
-from gesture_utils import get_landmark_positions, fingers_up
+from gesture_utils import get_landmark_positions, fingers_up, calculate_distance
 from draw_utils import init_canvas, draw_on_canvas
 
 cap = cv2.VideoCapture(0)
@@ -11,12 +11,6 @@ cap = cv2.VideoCapture(0)
 mp_hands = mp.solutions.hands
 hands = mp_hands.Hands(max_num_hands=1, min_detection_confidence=0.7)
 mp_draw = mp.solutions.drawing_utils
-
-canvas = None
-draw_color = (0, 0, 255)
-brush_thickness = 5
-drawing = False
-prev_point = None
 
 prev_gesture = None
 last_trigger_time = 0
@@ -27,9 +21,6 @@ while True:
     frame = cv2.flip(frame, 1)
     rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     results = hands.process(rgb)
-
-    if canvas is None:
-        canvas = init_canvas(frame.shape)
 
     if results.multi_hand_landmarks:
         for hand_landmarks in results.multi_hand_landmarks:
@@ -51,14 +42,19 @@ while True:
                     gesture = "Previous Slide"
 
                 if finger_status == [0, 1, 0, 0, 0]:
-                    drawing = True
                     x, y = landmarks[8][1], landmarks[8][2]
-                    curr_point = (x, y)
-                    canvas = draw_on_canvas(canvas, prev_point, curr_point, draw_color, brush_thickness)
-                    prev_point = curr_point
-                else:
-                    drawing = False
-                    prev_point = None
+                    screen_w, screen_h = pyautogui.size()
+                    pointer_x = int(x*screen_w /frame.shape[1])
+                    pointer_y = int(y*screen_h / frame.shape[0])
+                    pyautogui.moveTo(pointer_x, pointer_y)
+                    cv2.circle(frame, (x, y), 10, (0, 255, 255), cv2.FILLED)
+
+                    index_pos = (landmarks[8][1], landmarks[8][2])
+                    thumb_pos = (landmarks[4][1], landmarks[4][2])
+                    distance = calculate_distance(index_pos, thumb_pos)
+                    if distance < 40:
+                        pyautogui.click()
+                        time.sleep(0.3)
 
                 
                 if gesture and (gesture != prev_gesture or current_time - last_trigger_time > cooldown_duration):
@@ -74,11 +70,8 @@ while True:
                     print("Gesture Detected:", gesture)
                     prev_gesture = gesture
                     last_trigger_time = current_time
-
-    frame = cv2.addWeighted(frame, 1, canvas, 0.7, 0)
                 
     cv2.imshow("Gesture Presentation Controller", frame)
-    
     if cv2.waitKey(1) & 0xFF == 27:
         break
 
