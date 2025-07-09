@@ -4,12 +4,11 @@ import pyautogui
 import time
 
 from gesture_utils import get_landmark_positions, fingers_up, calculate_distance
-from draw_utils import init_canvas, draw_on_canvas
 
 cap = cv2.VideoCapture(0)
 
 mp_hands = mp.solutions.hands
-hands = mp_hands.Hands(max_num_hands=1, min_detection_confidence=0.7)
+hands = mp_hands.Hands(max_num_hands=1, min_detection_confidence=0.7, min_tracking_confidence = 0.7)
 mp_draw = mp.solutions.drawing_utils
 
 prev_gesture = None
@@ -18,6 +17,10 @@ cooldown_duration = 1.5
 
 while True:
     success, frame = cap.read()
+    if not success:
+        print("Camera not accessible")
+        break
+
     frame = cv2.flip(frame, 1)
     rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     results = hands.process(rgb)
@@ -40,22 +43,6 @@ while True:
                     gesture = "Next Slide"
                 elif finger_status == [0, 0, 1, 1, 0]:
                     gesture = "Previous Slide"
-
-                if finger_status == [0, 1, 0, 0, 0]:
-                    x, y = landmarks[8][1], landmarks[8][2]
-                    screen_w, screen_h = pyautogui.size()
-                    pointer_x = int(x*screen_w /frame.shape[1])
-                    pointer_y = int(y*screen_h / frame.shape[0])
-                    pyautogui.moveTo(pointer_x, pointer_y)
-                    cv2.circle(frame, (x, y), 10, (0, 255, 255), cv2.FILLED)
-
-                    index_pos = (landmarks[8][1], landmarks[8][2])
-                    thumb_pos = (landmarks[4][1], landmarks[4][2])
-                    distance = calculate_distance(index_pos, thumb_pos)
-                    if distance < 40:
-                        pyautogui.click()
-                        time.sleep(0.3)
-
                 
                 if gesture and (gesture != prev_gesture or current_time - last_trigger_time > cooldown_duration):
                     if gesture == "Start Presentation":
