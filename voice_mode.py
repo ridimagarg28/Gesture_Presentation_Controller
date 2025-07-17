@@ -9,7 +9,9 @@ def run_voice_mode():
     print("Say one of these commands: 'start', 'next', 'previous', 'end', or 'exit'")
 
     with mic as source:
-        recognizer.adjust_for_ambient_noise(source)
+        recognizer.energy_threshold = 300
+        recognizer.pause_threshold = 0.8
+        recognizer.adjust_for_ambient_noise(source, duration=1)
 
         while True:
             try:
@@ -20,21 +22,21 @@ def run_voice_mode():
 
                 if "start" in command:
                     pyautogui.press("f5")
-                    print("🟢 Presentation started.")
+                    print("Presentation started.")
                 elif "next" in command:
                     pyautogui.press("right")
-                    print("➡️ Moved to next slide.")
+                    print("Moved to next slide.")
                 elif "previous" in command:
                     pyautogui.press("left")
-                    print("⬅️ Moved to previous slide.")
+                    print("Moved to previous slide.")
                 elif "end" in command or "stop" in command:
                     pyautogui.press("esc")
-                    print("🔴 Presentation ended.")
+                    print("Presentation ended.")
                 elif "exit" in command:
-                    print("👋 Exiting voice control mode.")
+                    print("Exiting voice control mode.")
                     break
                 else:
-                    print("⚠️ Command not recognized. Try again.")
+                    print("Command not recognized. Try again.")
 
             except sr.WaitTimeoutError:
                 print("Timeout. Please try again.")
