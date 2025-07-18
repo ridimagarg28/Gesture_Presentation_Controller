@@ -6,7 +6,7 @@ from gesture_utils import get_landmark_positions, fingers_up
 
 def run_gesture_mode():
     cap = cv2.VideoCapture(0)
-
+    
     mp_hands = mp.solutions.hands
     hands = mp_hands.Hands(
         max_num_hands=1,
